@@ -32,11 +32,18 @@
         <!-- AI 테스트 페이지 -->
         <section id="aiPage" class="page">
             <h2>AI 동물상 테스트</h2>
-            <p>강아지상 vs 고양이상</p>
-            <button type="button" id="startAiBtn" onclick="initAI()">테스트 시작하기</button>
-            <div id="loading-spinner" class="hidden">모델 로딩 중...</div>
+            <p>사진을 업로드하여 강아지상인지 고양이상인지 확인해보세요!</p>
+            <div class="ai-controls">
+                <label for="imageUpload" class="custom-file-upload">
+                    📷 사진 업로드하기
+                </label>
+                <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)">
+            </div>
+            <div id="loading-spinner" class="hidden">모델 로딩 및 분석 중...</div>
             <div class="ai-content">
-                <div id="webcam-container"></div>
+                <div id="image-preview-container" class="hidden">
+                    <img id="face-image" src="#" alt="미리보기">
+                </div>
                 <div id="label-container"></div>
             </div>
         </section>

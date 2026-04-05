@@ -218,17 +218,51 @@ button:hover {
     height: 100px;
 }
 
-.ai-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+/* ... existing styles ... */
+
+.ai-controls {
+    margin-bottom: 2rem;
 }
 
-#webcam-container {
+#imageUpload {
+    display: none;
+}
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 12px 24px;
+    cursor: pointer;
+    background: #4cd137;
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(76, 209, 55, 0.4);
+}
+
+.custom-file-upload:hover {
+    background: #44bd32;
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(76, 209, 55, 0.6);
+}
+
+#image-preview-container {
+    width: 300px;
+    height: 300px;
     border: 4px solid var(--accent-color);
     border-radius: 20px;
     overflow: hidden;
+    margin-bottom: 20px;
+    background: var(--input-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#face-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 #label-container {
