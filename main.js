@@ -4,6 +4,20 @@ const optionInput = document.getElementById('optionInput');
 const addOptionBtn = document.getElementById('addOptionBtn');
 const spinBtn = document.getElementById('spinBtn');
 const resultDiv = document.getElementById('result');
+const themeBtn = document.getElementById('themeBtn');
+
+// 테마 관리
+const currentTheme = localStorage.getItem('theme');
+if (currentTheme) {
+    document.body.classList.toggle('light-mode', currentTheme === 'light');
+}
+
+themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const theme = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+    localStorage.setItem('theme', theme);
+    drawWheel(); // 테마 변경 시 다시 그리기 (텍스트 그림자 등 대응)
+});
 
 let options = ['옵션 1', '옵션 2', '옵션 3', '옵션 4', '옵션 5', '옵션 6'];
 let startAngle = 0;
@@ -12,8 +26,6 @@ let spinTimeout = null;
 let spinAngleStart = 10;
 let spinTime = 0;
 let spinTimeTotal = 0;
-
-let currentAngle = 0;
 
 const colors = [
     "#FFC312", "#F79F1F", "#E67E22", "#D35400", "#C0392B", "#E74C3C",
@@ -28,7 +40,7 @@ function drawWheel() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = document.body.classList.contains('light-mode') ? "#ccc" : "#fff";
     ctx.lineWidth = 2;
 
     ctx.font = 'bold 18px Pretendard, sans-serif';
