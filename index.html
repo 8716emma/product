@@ -1,87 +1,198 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 동물상 & 돌림판</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-</head>
-<body>
-    <div class="theme-toggle">
-        <button id="themeBtn">🌓</button>
-    </div>
+// 테마 관리
+const themeBtn = document.getElementById('themeBtn');
+const currentTheme = localStorage.getItem('theme');
+if (currentTheme) {
+    document.body.classList.toggle('light-mode', currentTheme === 'light');
+}
 
-    <main id="app">
-        <!-- 돌림판 페이지 -->
-        <section id="wheelPage" class="page active">
-            <h1>돌림판</h1>
-            <div class="wheel-container">
-                <canvas id="wheelCanvas" width="500" height="500"></canvas>
-                <div class="pointer"></div>
-            </div>
-            <div class="controls">
-                <input type="text" id="optionInput" placeholder="옵션을 추가하세요">
-                <button id="addOptionBtn">추가</button>
-                <button id="spinBtn">돌리기</button>
-            </div>
-            <div id="result"></div>
-        </section>
+themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const theme = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+    localStorage.setItem('theme', theme);
+    drawWheel(); 
+});
 
-        <!-- AI 테스트 페이지 -->
-        <section id="aiPage" class="page">
-            <h2>AI 동물상 테스트</h2>
-            <p>사진을 업로드하여 강아지상인지 고양이상인지 확인해보세요!</p>
-            <div class="ai-controls">
-                <label for="imageUpload" class="custom-file-upload">
-                    📷 사진 업로드하기
-                </label>
-                <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)">
-            </div>
-            <div id="loading-spinner" class="hidden">모델 로딩 및 분석 중...</div>
-            <div class="ai-content">
-                <div id="image-preview-container" class="hidden">
-                    <img id="face-image" src="#" alt="미리보기">
-                </div>
-                <div id="label-container"></div>
-            </div>
-        </section>
+// --- 페이지 전환 로직 ---
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
 
-        <!-- 문의 페이지 -->
-        <section id="contactPage" class="page">
-            <h3>제휴 문의</h3>
-            <p>함께 성장할 파트너를 찾습니다.</p>
-            <form action="https://formspree.io/f/xqegggoe" method="POST" id="contactForm">
-                <div class="form-group">
-                    <input type="text" name="name" placeholder="성함/업체명" required>
-                </div>
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="이메일 주소" required>
-                </div>
-                <div class="form-group">
-                    <textarea name="message" placeholder="문의 내용" required></textarea>
-                </div>
-                <button type="submit" id="submitBtn">문의하기</button>
-            </form>
-        </section>
-    </main>
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('onclick').includes(pageId)) item.classList.add('active');
+    });
 
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="showPage('wheelPage')">
-            <span class="icon">🎡</span>
-            <span class="label">돌림판</span>
-        </button>
-        <button class="nav-item" onclick="showPage('aiPage')">
-            <span class="icon">🐶</span>
-            <span class="label">동물상</span>
-        </button>
-        <button class="nav-item" onclick="showPage('contactPage')">
-            <span class="icon">📩</span>
-            <span class="label">문의</span>
-        </button>
-    </nav>
+    if (pageId === 'wheelPage') drawWheel();
+}
+window.showPage = showPage;
 
-    <script src="main.js"></script>
-</body>
-</html>
+// --- 돌림판 로직 ---
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const optionInput = document.getElementById('optionInput');
+const addOptionBtn = document.getElementById('addOptionBtn');
+const spinBtn = document.getElementById('spinBtn');
+const resultDiv = document.getElementById('result');
+let options = ['옵션 1', '옵션 2', '옵션 3', '옵션 4', '옵션 5', '옵션 6'];
+let startAngle = 0;
+let arc = Math.PI / (options.length / 2);
+let spinTimeout = null;
+let spinAngleStart = 10;
+let spinTime = 0;
+let spinTimeTotal = 0;
+const colors = ["#FFC312", "#F79F1F", "#E67E22", "#D35400", "#C0392B", "#E74C3C", "#9B59B6", "#8E44AD", "#2980B9", "#3498DB", "#1ABC9C", "#16A085", "#27AE60", "#2ECC71", "#34495E", "#2C3E50"];
+
+function drawWheel() {
+    const outsideRadius = 200, textRadius = 160, insideRadius = 50;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = document.body.classList.contains('light-mode') ? "#ccc" : "#fff";
+    ctx.lineWidth = 2;
+    ctx.font = 'bold 18px Pretendard, sans-serif';
+    for (let i = 0; i < options.length; i++) {
+        const angle = startAngle + i * arc;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath();
+        ctx.arc(250, 250, outsideRadius, angle, angle + arc, false);
+        ctx.arc(250, 250, insideRadius, angle + arc, angle, true);
+        ctx.stroke(); ctx.fill();
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 5; ctx.fillStyle = "white";
+        ctx.translate(250 + Math.cos(angle + arc / 2) * textRadius, 250 + Math.sin(angle + arc / 2) * textRadius);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+        const text = options[i];
+        ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+        ctx.restore();
+    }
+}
+
+function spin() { spinTime = 0; spinTimeTotal = Math.random() * 3000 + 4000; rotateWheel(); }
+function rotateWheel() {
+    spinTime += 30;
+    if (spinTime >= spinTimeTotal) { stopRotateWheel(); return; }
+    const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+    startAngle += (spinAngle * Math.PI / 180); drawWheel();
+    spinTimeout = requestAnimationFrame(rotateWheel);
+}
+function stopRotateWheel() {
+    cancelAnimationFrame(spinTimeout);
+    const degrees = startAngle * 180 / Math.PI + 90, arcd = arc * 180 / Math.PI;
+    const index = Math.floor((360 - degrees % 360) / arcd);
+    resultDiv.innerHTML = `결과: <span style="color:${colors[index % colors.length]}">${options[index]}</span>`;
+}
+function easeOut(t, b, c, d) { const ts = (t /= d) * t, tc = ts * t; return b + c * (tc + -3 * ts + 3 * t); }
+addOptionBtn.addEventListener('click', () => {
+    if (optionInput.value.trim() !== '') { options.push(optionInput.value); optionInput.value = ''; arc = Math.PI / (options.length / 2); drawWheel(); }
+});
+spinBtn.addEventListener('click', () => { resultDiv.innerHTML = ''; spin(); });
+drawWheel();
+
+// --- AI 동물상 테스트 로직 (이미지 업로드 방식) ---
+const AI_URL = "https://teachablemachine.withgoogle.com/models/JZKjOD0_-/";
+let aiModel, maxPredictions;
+
+async function loadModel() {
+    if (!aiModel) {
+        const modelURL = AI_URL + "model.json";
+        const metadataURL = AI_URL + "metadata.json";
+        aiModel = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = aiModel.getTotalClasses();
+    }
+}
+
+async function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const spinner = document.getElementById("loading-spinner");
+    const previewContainer = document.getElementById("image-preview-container");
+    const faceImage = document.getElementById("face-image");
+    const labelContainer = document.getElementById("label-container");
+
+    spinner.classList.remove("hidden");
+    labelContainer.innerHTML = "";
+    previewContainer.classList.add("hidden");
+
+    // 이미지 미리보기 세팅
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        faceImage.src = e.target.result;
+        previewContainer.classList.remove("hidden");
+        
+        // 모델 로드 및 예측
+        await loadModel();
+        
+        // 이미지 객체 생성하여 예측 (약간의 딜레이를 주어 이미지가 완전히 로드되게 함)
+        setTimeout(async () => {
+            const prediction = await aiModel.predict(faceImage);
+            displayResults(prediction);
+            spinner.classList.add("hidden");
+        }, 200);
+    };
+    reader.readAsDataURL(file);
+}
+window.handleImageUpload = handleImageUpload;
+
+function displayResults(prediction) {
+    const labelContainer = document.getElementById("label-container");
+    const resultMessage = document.getElementById("ai-result-message");
+    labelContainer.innerHTML = "";
+    resultMessage.innerHTML = "";
+    resultMessage.classList.add("hidden");
+
+    let highestProb = 0;
+    let bestMatch = "";
+
+    for (let i = 0; i < maxPredictions; i++) {
+        const probValue = prediction[i].probability;
+        const className = prediction[i].className;
+        const classTitle = className === "Class 1" ? "강아지" : 
+                           className === "Class 2" ? "고양이" : className;
+        const probability = (probValue * 100).toFixed(0);
+        
+        if (probValue > highestProb) {
+            highestProb = probValue;
+            bestMatch = classTitle;
+        }
+
+        const barContainer = document.createElement("div");
+        barContainer.className = "prediction-bar-container";
+        
+        const bar = document.createElement("div");
+        bar.className = "prediction-bar";
+        bar.style.width = probability + "%";
+        
+        const label = document.createElement("span");
+        label.className = "prediction-label";
+        label.innerHTML = `${classTitle}: ${probability}%`;
+        
+        if (probability > 50) {
+            bar.style.background = "var(--accent-color)";
+        } else {
+            bar.style.background = "rgba(255, 255, 255, 0.3)";
+        }
+        
+        barContainer.appendChild(bar);
+        barContainer.appendChild(label);
+        labelContainer.appendChild(barContainer);
+    }
+
+    // 결과 메시지 설정
+    if (highestProb > 0) {
+        resultMessage.classList.remove("hidden");
+        let title = "";
+        let desc = "";
+
+        if (bestMatch === "강아지") {
+            title = "🐶 당신은 사랑스러운 강아지상!";
+            desc = "다정하고 붙임성 있는 성격으로 주변 사람들에게 긍정적인 에너지를 주시는군요! 웃는 모습이 매력적이며 누구에게나 편안함을 주는 타입입니다.";
+        } else if (bestMatch === "고양이") {
+            title = "🐱 당신은 시크한 고양이상!";
+            desc = "도도하고 지적인 분위기를 풍기며, 알면 알수록 깊은 매력을 가진 분이시네요! 신비로운 첫인상과 함께 세련된 분위기가 돋보이는 타입입니다.";
+        } else {
+            title = `🤔 당신은 ${bestMatch}상!`;
+            desc = "독특하고 개성 넘치는 매력을 가지고 계시네요! 자신만의 분위기로 주변의 시선을 사로잡는 타입입니다.";
+        }
+
+        resultMessage.innerHTML = `<h4>${title}</h4><p>${desc}</p>`;
+    }
+}
